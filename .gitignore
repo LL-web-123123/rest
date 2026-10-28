@@ -1,0 +1,6 @@
+node_modules/
+data/*
+!data/config.example.json
+*.log
+*.bak*
+.DS_Store

@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>抖音群聊 AI 助手</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="dot" id="statusDot"></span>
+    <strong>抖音群聊 AI 助手</strong>
+    <span class="muted" id="statusText">正在读取状态…</span>
+  </div>
+  <div class="top-actions">
+    <span class="pill" id="accountPill">未登录</span>
+    <button id="btnConnect" class="btn ghost">登录</button>
+    <button id="btnDisconnect" class="btn ghost">退出登录</button>
+    <button id="btnToggle" class="btn primary">开始监听</button>
+  </div>
+</header>
+
+<main>
+  <section class="card" id="loginCard" hidden>
+    <h2>扫码登录</h2>
+    <p class="muted">用抖音 App 扫下面的二维码，扫完在手机上点确认。</p>
+    <div class="qr-wrap"><img id="qrImg" alt="登录二维码" /></div>
+    <div class="row" id="smsRow" hidden>
+      <input id="smsCode" placeholder="短信验证码" />
+      <button class="btn" id="btnSms">提交验证码</button>
+    </div>
+    <p class="error" id="loginError"></p>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>运行状态</h2>
+      <dl class="stats">
+        <div><dt>监听</dt><dd id="statListen">-</dd></div>
+        <div><dt>群数量</dt><dd id="statGroups">-</dd></div>
+        <div><dt>收到消息</dt><dd id="statReceived">-</dd></div>
+        <div><dt>已回复</dt><dd id="statReplied">-</dd></div>
+        <div><dt>本小时回复</dt><dd id="statHour">-</dd></div>
+        <div><dt>失败</dt><dd id="statFailed">-</dd></div>
+      </dl>
+      <div class="row">
+        <button class="btn ghost" id="btnTestApi">测试 DeepSeek</button>
+        <button class="btn ghost" id="btnTestSearch">测试联网搜索</button>
+        <span class="muted" id="testApiResult"></span>
+      </div>
+      <p class="muted" id="searchResult"></p>
+    </div>
+
+    <div class="card">
+      <h2>群聊白名单</h2>
+      <p class="muted">只有勾上的群才会回复。一个都不勾 = 一个群都不回，只记录消息。建议先只勾测试群。</p>
+      <div class="row">
+        <button class="btn ghost" id="btnRefreshGroups">刷新群列表</button>
+        <span class="muted" id="groupHint"></span>
+      </div>
+      <ul class="groups" id="groupList"></ul>
+    </div>
+
+    <div class="card">
+      <h2>手动发一句</h2>
+      <p class="muted">用来验证「能不能真的发进群」。选群 → 输入 → 发送。</p>
+      <div class="row">
+        <select id="manualGroup"></select>
+        <input id="manualText" placeholder="你好，我是小鱼" />
+        <button class="btn" id="btnManualSend">发送</button>
+      </div>
+      <p class="muted" id="manualResult"></p>
+    </div>
+    <div class="card">
+      <h2>接过来的记忆 <span class="muted" id="brainCount"></span></h2>
+      <p class="muted">指一个目录，里面放 <code>人设.md</code>、<code>记得的事.md</code>、<code>最近.md</code>。程序每次说话前读一遍，改了不用重启。</p>
+      <div class="row">
+        <input id="brainDir" placeholder="C:\Users\...\room\抖音大脑" />
+        <button class="btn ghost" id="btnBrainReload">重新读取</button>
+      </div>
+      <div class="row">
+        <input id="brainPreview" placeholder="打一句群里的消息，看看会想起哪几条" />
+        <button class="btn ghost" id="btnBrainPreview">试一下</button>
+      </div>
+      <ul class="feed" id="brainFacts"></ul>
+      <p class="muted" id="brainHint"></p>
+    </div>
+
+    <div class="card">
+      <h2>收藏表情包 <span class="muted" id="stickerCount"></span></h2>
+      <p class="muted">点一张就发到上面选的群。这些是账号自己收藏的表情，机器人在群里也会挑着用。</p>
+      <div class="row">
+        <select id="stickerGroup"></select>
+        <button class="btn ghost" id="btnRefreshStickers">重新拉取表情</button>
+      </div>
+      <div class="stickers" id="stickerList"></div>
+      <p class="muted" id="stickerHint"></p>
+    </div>
+
+    <div class="card">
+      <h2>没人理我的时候 <span class="muted" id="idleHint"></span></h2>
+      <p class="muted">群里安静够久，我自己去刷贴吧，把那边的人怎么说话记下来，写进「贴吧学的.md」，下次说话会带一点那个调子。</p>
+      <div class="row">
+        <label class="check"><input id="cfgIdleEnabled" type="checkbox" /> 开着</label>
+        <button class="btn ghost" id="btnIdleRun">现在就去刷一次</button>
+      </div>
+      <div class="settings" style="margin-top:10px">
+        <fieldset>
+          <legend>什么时候去</legend>
+          <label>安静多少分钟后 <input id="cfgIdleMinutes" type="number" min="1" max="600" /></label>
+          <label>两次之间至少隔（分钟） <input id="cfgIdleInterval" type="number" min="1" max="1440" /></label>
+        </fieldset>
+        <fieldset>
+          <legend>刷哪儿</legend>
+          <label>贴吧名字（多个用逗号隔开，每次随机挑一个） <input id="cfgTiebaBar" placeholder="孙笑川,deepseek" /></label>
+          <label>看几个帖子 <input id="cfgTiebaThreads" type="number" min="1" max="10" /></label>
+          <label>每个帖子看几楼 <input id="cfgTiebaPosts" type="number" min="1" max="20" /></label>
+        </fieldset>
+      </div>
+      <p class="muted" id="idleResult"></p>
+    </div>
+
+    <div class="card">
+      <h2>刷屏踢人</h2>
+      <p class="muted">同一句刷超过 N 次、或同类图片表情包刷超过 N 次、或十秒内连发太多条，直接踢。装之前只放过三种人：你本人、群主/管理员、机器人自己。</p>
+      <div class="row">
+        <label class="check"><input id="cfgSpamEnabled" type="checkbox" /> 开着检测</label>
+        <label class="check"><input id="cfgSpamDryRun" type="checkbox" /> 只记录不踢（演练）</label>
+        <label class="check"><input id="cfgSpamAnnounce" type="checkbox" /> 踢了之后在群里说一句</label>
+      </div>
+      <div class="settings" style="margin-top:10px">
+        <fieldset>
+          <legend>重复</legend>
+          <label>同一内容超过几次就踢 <input id="cfgSpamRepeat" type="number" min="2" max="100" /></label>
+          <label>重复的统计窗口（秒） <input id="cfgSpamRepeatWindow" type="number" min="5" max="3600" /></label>
+        </fieldset>
+        <fieldset>
+          <legend>连发</legend>
+          <label>时间窗内最多几条 <input id="cfgSpamMax" type="number" min="2" max="200" /></label>
+          <label>连发统计窗口（秒） <input id="cfgSpamWindow" type="number" min="2" max="600" /></label>
+          <label>每小时最多踢几个 <input id="cfgSpamMaxActions" type="number" min="0" max="100" /></label>
+        </fieldset>
+      </div>
+      <p class="muted" id="spamHint"></p>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>最近收到的消息</h2>
+      <ul class="feed" id="msgFeed"></ul>
+    </div>
+    <div class="card">
+      <h2>最近发出的回复</h2>
+      <ul class="feed" id="replyFeed"></ul>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>设置</h2>
+    <div class="settings">
+      <fieldset>
+        <legend>DeepSeek</legend>
+        <label>API Key <input id="cfgApiKey" type="password" placeholder="sk-… 留空表示不修改" autocomplete="off" /></label>
+        <button class="btn ghost" id="btnClearKey" type="button">清除已保存的 Key</button>
+        <label>模型
+          <select id="cfgModel">
+            <option value="deepseek-flash">deepseek-flash（快、便宜）</option>
+            <option value="deepseek-v4-pro">deepseek-v4-pro（慢、强）</option>
+          </select>
+        </label>
+        <label>温度 <input id="cfgTemp" type="number" step="0.05" min="0" max="2" /></label>
+        <label>最大输出 token <input id="cfgMaxTokens" type="number" min="32" max="4096" /></label>
+        <label>超时 ms <input id="cfgTimeout" type="number" min="3000" max="120000" step="1000" /></label>
+        <label>重试次数 <input id="cfgRetries" type="number" min="0" max="5" /></label>
+        <label class="check"><input id="cfgThinking" type="checkbox" /> 开启思考模式（更聪明但更慢更贵）</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>机器人</legend>
+        <label>名字 <input id="cfgName" /></label>
+        <label>人设 <textarea id="cfgPersona" rows="4"></textarea></label>
+        <label>说话风格 <textarea id="cfgStyle" rows="2"></textarea></label>
+        <label>老大在群里的 uid（逗号分隔，只有这些 id 会被当成老大） <input id="cfgOwnerUids" placeholder="填你自己的 uid" /></label>
+        <label>关注主题（逗号分隔，命中就更愿意接话） <input id="cfgTopics" /></label>
+        <label>接话模式
+          <select id="cfgMode">
+            <option value="mention">只在 @ 我 时回复（最保守）</option>
+            <option value="smart">@ 我 + 有人提问 / 命中主题（推荐）</option>
+            <option value="active">再加上偶尔主动插话</option>
+          </select>
+        </label>
+        <label>主动插话概率（0-1） <input id="cfgProb" type="number" min="0" max="1" step="0.01" /></label>
+        <label>单群冷却秒 <input id="cfgGroupCd" type="number" min="0" max="600" /></label>
+        <label>全局冷却秒 <input id="cfgReplyCd" type="number" min="0" max="3600" /></label>
+        <label>每小时最多回复 <input id="cfgMaxHour" type="number" min="1" max="200" /></label>
+        <label>回复最大字数 <input id="cfgMaxChars" type="number" min="8" max="500" /></label>
+        <label class="check"><input id="cfgWatchVideos" type="checkbox" /> 群里有人分享视频时，下载下来看几帧再说话</label>
+        <label>每小时最多看几个视频 <input id="cfgMaxWatches" type="number" min="0" max="60" /></label>
+        <label class="check"><input id="cfgWatchImages" type="checkbox" /> 群里有人发图片时，下一张看看再说话</label>
+        <label>每小时最多看几张图 <input id="cfgMaxImageLooks" type="number" min="0" max="60" /></label>
+        <label class="check"><input id="cfgSendStickers" type="checkbox" /> 允许甩收藏表情包</label>
+        <label class="check"><input id="cfgUseMemes" type="checkbox" /> 会用热梗（人味插件那份梗库，挑跟话题沾边的几条给它）</label>
+        <label>一次最多给几条梗 <input id="cfgMemeLimit" type="number" min="0" max="8" /></label>
+        <label class="check"><input id="cfgWebSearch" type="checkbox" /> 允许联网搜索（拿不准就搜一下再说）</label>        <label>每小时最多搜几次 <input id="cfgMaxSearch" type="number" min="0" max="100" /></label>
+        <label>每次取几条结果 <input id="cfgSearchCount" type="number" min="1" max="20" /></label>
+        <label>ffmpeg 路径（留空自动找） <input id="cfgFfmpeg" placeholder="C:\ffmpeg\bin\ffmpeg.exe" /></label>
+        <label>上下文条数 <input id="cfgCtxSize" type="number" min="0" max="40" /></label>
+        <label class="check"><input id="cfgCtxEnabled" type="checkbox" /> 使用上下文</label>
+        <label class="check"><input id="cfgQuote" type="checkbox" /> 被 @ 时用引用回复</label>
+        <label class="check"><input id="cfgDebug" type="checkbox" /> 调试日志</label>
+      </fieldset>
+    </div>
+    <div class="row">
+      <button class="btn primary" id="btnSave">保存设置</button>
+      <span class="muted" id="saveResult"></span>
+      <button class="btn ghost" id="btnClearCtx">清空所有群上下文</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>日志</h2>
+    <pre class="logs" id="logBox"></pre>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

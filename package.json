@@ -1,0 +1,19 @@
+{
+  "name": "dybot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "抖音群聊 AI 助手：douyin-im 传输层 + DeepSeek 大脑 + 本地图形界面",
+  "main": "src/index.mjs",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node src/index.mjs",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "check": "node scripts/check-env.mjs"
+  },
+  "dependencies": {
+    "douyin-im": "1.1.0"
+  }
+}

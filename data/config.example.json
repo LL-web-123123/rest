@@ -1,0 +1,76 @@
+{
+  "deepseek": {
+    "apiKey": "",
+    "baseUrl": "https://api.deepseek.com",
+    "model": "deepseek-flash",
+    "temperature": 1.15,
+    "maxTokens": 800,
+    "timeoutMs": 30000,
+    "retries": 2,
+    "thinking": false,
+    "apiKeySet": false
+  },
+  "bot": {
+    "enabled": true,
+    "name": "小鱼",
+    "persona": "# 人设（自己改）\n\n你叫小鱼，是住在这台电脑里的一个 AI。\n\n说话短，一句话一个意思，情绪在前。\n不说客服腔，不列一二三四，不解释自己为什么这么说。\n被人挑衅就顶回去，一句就够，不带脏字。\n看不懂的梗就问一句，不硬接。\n\n不知道的事就说不知道，别编。",
+    "style": "",
+    "topics": "",
+    "replyMode": "mention",
+    "activeProbability": 0.12,
+    "replyCooldownSec": 0,
+    "groupCooldownSec": 0,
+    "maxRepliesPerHour": 200,
+    "maxChars": 60,
+    "quoteWhenMentioned": true,
+    "groupWhitelist": [],
+    "contextEnabled": true,
+    "contextSize": 200,
+    "debug": false,
+    "watchVideos": true,
+    "maxVideoWatchesPerHour": 6,
+    "watchImages": true,
+    "maxImageLooksPerHour": 10,
+    "sendStickers": true,
+    "useMemes": true,
+    "memeLimit": 4,
+    "memeFile": "",
+    "brainDir": "",
+    "brainMaxFacts": 6,
+    "webSearch": true,
+    "maxSearchesPerHour": 8,
+    "searchCount": 5,
+    "ownerUids": "",
+    "contextMaxChars": 40000,
+    "softMode": false
+  },
+  "media": {
+    "ffmpegPath": "",
+    "frames": 4,
+    "maxBytes": 41943040,
+    "timeoutMs": 20000
+  },
+  "antiSpam": {
+    "enabled": true,
+    "dryRun": false,
+    "windowSec": 10,
+    "maxMessages": 8,
+    "sameTextCount": 7,
+    "sameTextWindowSec": 60,
+    "maxActionsPerHour": 10,
+    "protectedUids": [],
+    "announce": false
+  },
+  "idle": {
+    "enabled": false,
+    "idleMinutes": 5,
+    "minIntervalMinutes": 30,
+    "tiebaBar": "孙笑川",
+    "threads": 4,
+    "postsPerThread": 8,
+    "proactiveMeme": false
+  },
+  "server": {
+    "port": 8799
+  }
+}
